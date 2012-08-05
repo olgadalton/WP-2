@@ -53,7 +53,8 @@
     
     [self.tbView reloadData];
     
-    if ([[PreferencesManager sharedManager].userSelectedStations count] == 0) 
+    if (([[PreferencesManager sharedManager].userSelectedStations count] == 0 && currentType == StationsSegment && !childItem) 
+        || ([[PreferencesManager sharedManager].songExceptions count] == 0 && currentType == ExceptionsSegment && !childItem)) 
     {
         [self.addStationButton setHidden:NO];
     }
@@ -61,8 +62,6 @@
     {
         [self.addStationButton setHidden:YES];
     }
-    
-    [self.addStationButton setTitle:NSLocalizedString(@"Select station", nil) forState: UIControlStateNormal];
     
     if (!childItem) 
     {

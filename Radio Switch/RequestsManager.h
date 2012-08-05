@@ -50,4 +50,12 @@
 -(NSMutableArray *) searchResultsForTerm: (NSString *) searchTerm;
 -(NSArray *) searchForTermInUserStations: (NSString *) term;
 
+-(void) addStation: (NSDictionary *) station;
+
+-(void) loadStationsFromOnlineCache;
+
+- (NSString *)uuid;
+
+-(void) registerDevice;
+
 @end

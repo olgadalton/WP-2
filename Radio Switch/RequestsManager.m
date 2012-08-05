@@ -48,6 +48,55 @@ static RequestsManager *sharedRequestsManager = nil;
     return self;
 }
 
+-(void) kirssRequestError: (NSString *) errorDescription
+{
+    //
+}
+
+-(void) kirssRequestSuccess:  (NSString *) data
+                      andInfo: (NSDictionary *) info
+{
+    if ([info objectForKey: @"handler"]) 
+    {
+        [[info objectForKey: @"handler"] release];
+    }
+}
+
+
+-(void) addStation: (NSDictionary *) station
+{
+    NSInteger categoryId = -10;
+    
+    for (NSDictionary *cat in self.allData) 
+    {
+        if ([[cat objectForKey: @"name"] isEqualToString: [station objectForKey: @"genre"]]) 
+        {
+            categoryId = [[cat objectForKey: @"id"] intValue];
+            break;
+        }
+    }
+    
+    if (categoryId >= 0) 
+    {
+        RequestsHandler *handlez = [[RequestsHandler alloc] initWithDelegate:self andErrorSelector:@selector(kirssRequestError:) andSuccessSelector:@selector(kirssRequestSuccess:andInfo:)];
+        
+        NSString *url = [NSString stringWithFormat: @"http://www.dev.kirss.net/radio/main.php?task=addStation&uuid=%@&cat=%d&url=%@&country=%@&name=%@", 
+                         [[NSUserDefaults standardUserDefaults] objectForKey: @"uuid"],
+                         [station objectForKey: @"streamurl"],
+                         [station objectForKey: @"country"],
+                         [station objectForKey: @"name"]];
+        
+        NSLog(@"add station url - %@", url);
+        
+        [handlez loadDataWithPostData:nil andURL:url
+                        andHTTPMethod:@"GET" andContentType:@"application/json" andAuthorization:nil];
+    }
+    else
+    {
+        // Nothing to do. App has a bug then :) hopefully not
+    }
+}
+
 -(void) urlIsCorrect: (NSString *) url andResultSelector: (SEL) resultSelector andDelegate: (id) delegate
 {
     self.waitAlert = [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Checking URL...\nPlease wait!", nil) message:nil delegate:self cancelButtonTitle:nil otherButtonTitles: nil] autorelease];
@@ -109,6 +158,48 @@ static RequestsManager *sharedRequestsManager = nil;
         }
     }
     return results;
+}
+
+-(void) deviceRegistrationSucceeded: (NSString *) data andInfo: (NSDictionary *) info
+{
+    if ([info objectForKey: @"handler"]) 
+    {
+        [[info objectForKey: @"handler"] release];
+    }
+    
+    NSDictionary *result = [data objectFromJSONString];
+    
+    if ([[result objectForKey: @"success"] intValue] == 1) 
+    {
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"kirssRegistered"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    
+    NSLog(@"registration success - %@", [result objectForKey: @"success"]);
+    
+}
+
+-(void) registerDevice
+{
+    RequestsHandler *handlez = [[RequestsHandler alloc] initWithDelegate:self andErrorSelector:@selector(kirssRequestError:) andSuccessSelector:@selector(deviceRegistrationSucceeded:andInfo:)];
+    
+    NSString *url = [NSString stringWithFormat:@"http://www.dev.kirss.net/radio/main.php?task=register&uuid=%@", [self uuid]];
+    
+    [handlez loadDataWithPostData:nil andURL:url andHTTPMethod:@"GET" andContentType:@"application/json" andAuthorization:nil];
+}
+
+- (NSString *)uuid
+{
+    CFUUIDRef uuidRef = CFUUIDCreate(NULL);
+    CFStringRef uuidStringRef = CFUUIDCreateString(NULL, uuidRef);
+    CFRelease(uuidRef);
+    NSString *uuid = [NSString stringWithString:(NSString *)
+                      uuidStringRef];
+    CFRelease(uuidStringRef);
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey: @"uuid"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    return uuid;
 }
 
 -(void) performURLCheck: (NSDictionary *) data
@@ -280,6 +371,7 @@ static RequestsManager *sharedRequestsManager = nil;
 {
     [self loadStationsDataFromCache];
 }
+                                
 
 -(void) kirssCacheDataSuccess:  (NSString *) data
                       andInfo: (NSDictionary *) info

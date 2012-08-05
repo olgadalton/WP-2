@@ -39,6 +39,11 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     
+    if (![[NSUserDefaults standardUserDefaults] boolForKey: @"kirssRegistered"]) 
+    {
+        [[RequestsManager sharedManager] registerDevice];
+    }
+    
     return YES;
 }
 

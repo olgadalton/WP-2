@@ -18,11 +18,6 @@ enum ViewType {
     RecordedView = 3
     };
 
-enum PickerType {
-    GenrePicker = 0,
-    CountryPicker = 1
-    };
-
 @interface StationsListViewController : UIViewController 
                                         <UITableViewDelegate, UITableViewDataSource, UIActionSheetDelegate, UISearchBarDelegate,
                                             UIPickerViewDataSource, UIPickerViewDelegate>
@@ -67,6 +62,8 @@ enum PickerType {
     int selectedRow;
     
     NSString *lastSelectedCode, *lastSelectedGenre;
+    
+    BOOL onButton;
 }
 
 @property (nonatomic, retain) IBOutlet UITableView *tbView;
@@ -110,7 +107,7 @@ enum PickerType {
 -(IBAction)showGenrePicker:(id)sender;
 -(IBAction)showCountryPicker:(id)sender;
 
--(void) setupPickerView;
+-(void) setupPickerViewWithAnimation: (NSNumber *) animated;
 
 -(IBAction)selectPickerTitle:(id)sender;
 -(IBAction)cancelPickerTitle:(id)sender;

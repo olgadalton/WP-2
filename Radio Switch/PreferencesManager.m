@@ -7,6 +7,7 @@
 //
 
 #import "PreferencesManager.h"
+#import "RequestsManager.h"
 
 @implementation PreferencesManager
 
@@ -81,7 +82,11 @@ static  PreferencesManager *sharedRequestsManager = nil;
     [[NSUserDefaults standardUserDefaults] setObject:self.userAddedStations forKey: @"stations"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     
-    // Do request?
+    [[RequestsManager sharedManager] addStation: newStation];
+    
+    UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Your station is added and can be found under Custom stations list", nil) message:nil delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
+    
+    [alert show];
 }
 
 -(void) removeStationAtIndex: (NSInteger) index

@@ -30,6 +30,8 @@
     
     selectedSection = -10;
     
+    self.searchBar.showsCancelButton = NO; 
+    
     if (currentViewType == CustomView) 
     {
         if ([[PreferencesManager sharedManager].userAddedStations count] == 0) 
@@ -74,6 +76,9 @@
     [self.pickerNavbar setTintColor: [UIColor blackColor]];
     [self.pickerNavItem setTitle: NSLocalizedString(@"Add new station", nil)];
     
+    [self.genreButton setTitle:NSLocalizedString(@"Genre", nil) forState:UIControlStateNormal];
+    [self.countryButton setTitle:NSLocalizedString(@"Country", nil) forState:UIControlStateNormal];
+    
     self.pickerNavItem.leftBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle: NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(dismissPicker)] autorelease];
     
     self.pickerNavItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Add", nil) style:UIBarButtonItemStyleDone target:self action:@selector(saveAndDismiss)] autorelease];
@@ -113,10 +118,28 @@
     }
 }
 
+- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar {  
+    self.searchBar.showsCancelButton = YES;  
+    return YES;  
+}  
+
+- (BOOL)searchBarShouldEndEditing:(UISearchBar *)searchBar {  
+    self.searchBar.showsCancelButton = NO;  
+    return YES;
+}  
+
 -(void) searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
 {
-    searching = YES;
-    [self.tbView reloadData];
+    if ([searchText length]) 
+    {
+        searching = YES;
+        [self.tbView reloadData];
+    }
+    else
+    {
+        searching = NO;
+        [self.tbView reloadData];
+    }
 }
 
 -(void) searchBarCancelButtonClicked:(UISearchBar *)searchBar
@@ -147,7 +170,7 @@
     
     if (isCorrect  == YES)
     {
-        [[PreferencesManager sharedManager] addStation: [NSDictionary dictionaryWithObjectsAndKeys:self.stationNameField.text, @"name", self.stationURLField.text, @"streamurl", nil]];
+        [[PreferencesManager sharedManager] addStation: [NSDictionary dictionaryWithObjectsAndKeys:self.stationNameField.text, @"name", self.stationURLField.text, @"streamurl", self.lastSelectedCode, @"country", self.lastSelectedGenre, @"genre", nil]];
         
         [self dismissPicker];
     }
@@ -161,7 +184,10 @@
                                               
 -(void) saveAndDismiss
 {
-    if (self.stationURLField.text.length && self.stationNameField.text.length) 
+    if (self.stationURLField.text.length && self.stationNameField.text.length 
+                && self.countryButton.titleLabel.text.length && self.genreButton.titleLabel.text.length
+                && ![self.genreButton.titleLabel.text isEqualToString:NSLocalizedString(@"Genre", nil)]
+                && ![self.countryButton.titleLabel.text isEqualToString: NSLocalizedString(@"Country", nil)]) 
     {
         // Validate url
         
@@ -186,7 +212,10 @@
         
         editingInProcess = NO;
         
-        [self performSelector:@selector(scrollMeUp) withObject: nil afterDelay:0.0f];
+        if (!onButton) 
+        {
+            [self performSelector:@selector(scrollMeUp) withObject: nil afterDelay:0.0f];
+        }
     }
 }
 
@@ -922,30 +951,48 @@
 {
     currentPickerType = GenrePicker;
     [self.selectionPicker reloadAllComponents];
+    onButton = YES;
     
-    [self setupPickerView];
+    if (self.currentTextField && [self.currentTextField isFirstResponder])
+    {
+        [self.currentTextField resignFirstResponder];
+        [self performSelector:@selector(setupPickerViewWithAnimation:) withObject:[NSNumber numberWithBool:NO] afterDelay:0.0f];
+    }
+    else
+    {
+        [self performSelector:@selector(setupPickerViewWithAnimation:) withObject:[NSNumber numberWithBool:YES] afterDelay:0.0f];
+    }
 }
 
 -(IBAction)showCountryPicker:(id)sender
 {
     currentPickerType = CountryPicker;
     [self.selectionPicker reloadAllComponents];
+    onButton = YES;
     
-    [self setupPickerView];
-}
-
--(void) setupPickerView
-{
     if (self.currentTextField && [self.currentTextField isFirstResponder])
     {
         [self.currentTextField resignFirstResponder];
+        [self performSelector:@selector(setupPickerViewWithAnimation:) withObject:[NSNumber numberWithBool: NO] afterDelay:0.0f];
     }
+    else
+    {
+        [self performSelector:@selector(setupPickerViewWithAnimation:) withObject:[NSNumber numberWithBool: NO] afterDelay:0.0f];
+    }
+}
+
+-(void) setupPickerViewWithAnimation: (NSNumber *) animated
+{
     
     CGRect datePickerFrame = self.pickerMainView.frame;
     datePickerFrame.size.height = 210.0f;
-    [UIView beginAnimations:@"" context: NULL];
-    [UIView setAnimationDuration: 0.3f];
-    [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
+    
+    if ([animated boolValue]) 
+    {
+        [UIView beginAnimations:@"" context: NULL];
+        [UIView setAnimationDuration: 0.3f];
+        [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
+    }
     
     [self.pickerMainView setFrame: CGRectMake(0.0, 0.0f, datePickerFrame.size.width, 369.0f)];
      
@@ -964,7 +1011,10 @@
     self.genreButton.frame = genreBtnFrame;
     self.countryButton.frame = countryBtnFrame;
     
-    [UIView commitAnimations];
+    if ([animated boolValue]) 
+    {
+        [UIView commitAnimations];
+    }
     
     if (currentPickerType == GenrePicker)
     {
@@ -1008,10 +1058,7 @@
 
 -(void) desetupPickerView
 {
-    if (self.currentTextField && [self.currentTextField isFirstResponder])
-    {
-        [self.currentTextField resignFirstResponder];
-    }
+    onButton = NO;
     
     CGRect datePickerFrame = self.pickerMainView.frame;
     [UIView beginAnimations:@"" context: NULL];
