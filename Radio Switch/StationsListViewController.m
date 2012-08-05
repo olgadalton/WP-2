@@ -19,6 +19,8 @@
 @synthesize pickerNavbar, pickerNavItem, pickerMainView;
 @synthesize stationNameField, stationURLField, currentTextField;
 @synthesize addStationButton, analyzingBrowser, searchBar;
+@synthesize genreButton, countryButton, selectionPicker;
+@synthesize cancelButton, selectButton, lastSelectedCode, lastSelectedGenre;
 
 -(void) viewWillAppear:(BOOL)animated
 {
@@ -64,6 +66,11 @@
 
 -(void) showBottomPopup
 {
+    [self.selectButton setHidden: YES];
+    [self.cancelButton setHidden: YES];
+    [self.stationNameField setHidden: NO];
+    [self.stationURLField setHidden: NO];
+    
     [self.pickerNavbar setTintColor: [UIColor blackColor]];
     [self.pickerNavItem setTitle: NSLocalizedString(@"Add new station", nil)];
     
@@ -76,6 +83,8 @@
     [self.pickerMainView removeFromSuperview];
     
     CGRect datePickerFrame = self.pickerMainView.frame;
+    
+    datePickerFrame.size.height = 210.0f;
     
     [self.pickerMainView setFrame: CGRectMake(0.0, self.view.frame.size.height, datePickerFrame.size.width, datePickerFrame.size.height)];
     
@@ -186,6 +195,7 @@
     if (!editingInProcess && pickerVisible) 
     {
         CGRect datePickerFrame = self.pickerMainView.frame;
+        datePickerFrame.size.height = 210.0f;
         [UIView beginAnimations:@"" context: NULL];
         [UIView setAnimationDuration: 0.15f];
         [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
@@ -198,14 +208,15 @@
 
 -(IBAction)editingDidStart:(id)sender
 {
+    self.currentTextField = sender;
+    
     if (pickerVisible == NO) 
     {
         return;
     }
     
-    self.currentTextField = sender;
-    
     CGRect datePickerFrame = self.pickerMainView.frame;
+    datePickerFrame.size.height = 210.0f;
     
     if (!editingInProcess) 
     {
@@ -229,6 +240,7 @@
     }
     
     CGRect datePickerFrame = self.pickerMainView.frame;
+    datePickerFrame.size.height = 210.0f;
     [UIView beginAnimations:@"" context: NULL];
     [UIView setAnimationDuration: 0.3f];
     [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
@@ -904,6 +916,194 @@
     }
     
     return 10.0f;
+}
+
+-(IBAction)showGenrePicker:(id)sender
+{
+    currentPickerType = GenrePicker;
+    [self.selectionPicker reloadAllComponents];
+    
+    [self setupPickerView];
+}
+
+-(IBAction)showCountryPicker:(id)sender
+{
+    currentPickerType = CountryPicker;
+    [self.selectionPicker reloadAllComponents];
+    
+    [self setupPickerView];
+}
+
+-(void) setupPickerView
+{
+    if (self.currentTextField && [self.currentTextField isFirstResponder])
+    {
+        [self.currentTextField resignFirstResponder];
+    }
+    
+    CGRect datePickerFrame = self.pickerMainView.frame;
+    datePickerFrame.size.height = 210.0f;
+    [UIView beginAnimations:@"" context: NULL];
+    [UIView setAnimationDuration: 0.3f];
+    [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
+    
+    [self.pickerMainView setFrame: CGRectMake(0.0, 0.0f, datePickerFrame.size.width, 369.0f)];
+     
+    [self.stationNameField setHidden: YES];
+    [self.stationURLField setHidden: YES];
+    
+    [self.selectButton setHidden: NO];
+    [self.cancelButton setHidden: NO];
+    
+    CGRect genreBtnFrame = self.genreButton.frame;
+    CGRect countryBtnFrame = self.countryButton.frame;
+    
+    genreBtnFrame.origin.y  = 54.0f;
+    countryBtnFrame.origin.y = 54.0f;
+    
+    self.genreButton.frame = genreBtnFrame;
+    self.countryButton.frame = countryBtnFrame;
+    
+    [UIView commitAnimations];
+    
+    if (currentPickerType == GenrePicker)
+    {
+        if (self.lastSelectedGenre)
+        {
+            for (NSDictionary *genre in [RequestsManager sharedManager].allData)
+            {
+                if ([[genre objectForKey: @"name"] isEqualToString: self.lastSelectedGenre])
+                {
+                    selectedRow = [[RequestsManager sharedManager].allData indexOfObject: genre];
+                    [self.selectionPicker selectRow:selectedRow inComponent:0 animated:YES];
+                    break;
+                }
+            }
+        }
+        else
+        {
+            [self.selectionPicker selectRow:0 inComponent:0 animated:YES];
+        }
+    }
+    else
+    {
+        if (self.lastSelectedCode)
+        {
+            for (NSString *code in [NSLocale ISOCountryCodes])
+            {
+                if ([code isEqualToString: self.lastSelectedCode])
+                {
+                    selectedRow = [[NSLocale ISOCountryCodes] indexOfObject: code];
+                    [self.selectionPicker selectRow:selectedRow inComponent:0 animated:YES];
+                    break;
+                }
+            }
+        }
+        else
+        {
+            [self.selectionPicker selectRow:0 inComponent:0 animated:YES];
+        }
+    }
+}
+
+-(void) desetupPickerView
+{
+    if (self.currentTextField && [self.currentTextField isFirstResponder])
+    {
+        [self.currentTextField resignFirstResponder];
+    }
+    
+    CGRect datePickerFrame = self.pickerMainView.frame;
+    [UIView beginAnimations:@"" context: NULL];
+    [UIView setAnimationDuration: 0.3f];
+    [UIView setAnimationCurve: UIViewAnimationCurveEaseIn];
+    
+    datePickerFrame.size.height = 210.0f;
+    
+    [self.pickerMainView setFrame: CGRectMake(0.0, self.view.frame.size.height - datePickerFrame.size.height, datePickerFrame.size.width, 369.0f)];
+    
+    [self.stationNameField setHidden: NO];
+    [self.stationURLField setHidden: NO];
+    
+    [self.selectButton setHidden: YES];
+    [self.cancelButton setHidden: YES];
+    
+    CGRect genreBtnFrame = self.genreButton.frame;
+    CGRect countryBtnFrame = self.countryButton.frame;
+    
+    genreBtnFrame.origin.y  = 160.0f;
+    countryBtnFrame.origin.y = 160.0f;
+    
+    self.genreButton.frame = genreBtnFrame;
+    self.countryButton.frame = countryBtnFrame;
+    
+//    CGRect viewFrame = self.view.frame;
+//    viewFrame.size.height = 210.0f;
+//    self.view.frame = viewFrame;
+    
+    [UIView commitAnimations];
+}
+
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    if (currentPickerType == GenrePicker)
+    {
+        return [[RequestsManager sharedManager].allData count];
+    }
+    else if(currentPickerType == CountryPicker)
+    {
+        return [[NSLocale ISOCountryCodes] count];
+    }
+    
+    return 0;
+}
+
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
+{
+    if (currentPickerType == GenrePicker)
+    {
+        return [[[RequestsManager sharedManager].allData objectAtIndex: row] objectForKey: @"name"];
+    }
+    else if(currentPickerType == CountryPicker)
+    {
+        NSString *countryCode = [[NSLocale ISOCountryCodes] objectAtIndex: row];
+        
+        return [[NSLocale currentLocale]
+                displayNameForKey:NSLocaleCountryCode
+                value:countryCode];
+    }
+    return nil;
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
+{
+    selectedRow = row;
+}
+
+-(IBAction)selectPickerTitle:(id)sender
+{
+    if (currentPickerType == GenrePicker)
+    {
+        self.lastSelectedGenre = [self pickerView:self.selectionPicker titleForRow: selectedRow forComponent:0];
+        [self.genreButton setTitle:self.lastSelectedGenre forState: UIControlStateNormal];
+    }
+    else
+    {
+        self.lastSelectedCode = [[NSLocale ISOCountryCodes] objectAtIndex: selectedRow];
+        [self.countryButton setTitle:self.lastSelectedCode forState:UIControlStateNormal];
+    }
+    
+    [self desetupPickerView];
+}
+
+-(IBAction)cancelPickerTitle:(id)sender
+{
+    [self desetupPickerView];
 }
 
 @end

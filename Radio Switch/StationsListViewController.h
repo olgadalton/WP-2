@@ -18,8 +18,14 @@ enum ViewType {
     RecordedView = 3
     };
 
+enum PickerType {
+    GenrePicker = 0,
+    CountryPicker = 1
+    };
+
 @interface StationsListViewController : UIViewController 
-                                        <UITableViewDelegate, UITableViewDataSource, UIActionSheetDelegate, UISearchBarDelegate>
+                                        <UITableViewDelegate, UITableViewDataSource, UIActionSheetDelegate, UISearchBarDelegate,
+                                            UIPickerViewDataSource, UIPickerViewDelegate>
 {
     IBOutlet UITableView *tbView;
     
@@ -39,6 +45,7 @@ enum ViewType {
     
     IBOutlet FixedTextField *stationNameField;
     IBOutlet FixedTextField *stationURLField;
+    IBOutlet UIButton *genreButton, *countryButton;
     
     FixedTextField *currentTextField;
     
@@ -50,6 +57,16 @@ enum ViewType {
     IBOutlet UISearchBar *searchBar;
     
     BOOL searching;
+    
+    IBOutlet UIPickerView *selectionPicker;
+    
+    enum PickerType currentPickerType;
+    
+    IBOutlet UIButton *cancelButton, *selectButton;
+    
+    int selectedRow;
+    
+    NSString *lastSelectedCode, *lastSelectedGenre;
 }
 
 @property (nonatomic, retain) IBOutlet UITableView *tbView;
@@ -67,10 +84,15 @@ enum ViewType {
 @property (nonatomic, retain) IBOutlet FixedTextField *stationNameField;
 @property (nonatomic, retain) IBOutlet FixedTextField *stationURLField;
 @property (nonatomic, retain) FixedTextField *currentTextField;
+@property (nonatomic, retain) IBOutlet UIButton *genreButton, *countryButton;
 
 @property (nonatomic, retain) IBOutlet UIButton *addStationButton;
 
 @property (nonatomic, retain) IBOutlet UISearchBar *searchBar;
+
+@property (nonatomic, retain) IBOutlet UIPickerView *selectionPicker;
+@property (nonatomic, retain) IBOutlet UIButton *cancelButton, *selectButton;
+@property (nonatomic, retain) NSString *lastSelectedCode, *lastSelectedGenre;
 
 -(IBAction)viewTypeChanged:(id)sender;
 -(IBAction)categoryButtonPressed:(id)sender;
@@ -84,5 +106,15 @@ enum ViewType {
 -(IBAction)editingDidStart:(id)sender;
 
 -(void) urlCheckDone: (NSNumber *) result;
+
+-(IBAction)showGenrePicker:(id)sender;
+-(IBAction)showCountryPicker:(id)sender;
+
+-(void) setupPickerView;
+
+-(IBAction)selectPickerTitle:(id)sender;
+-(IBAction)cancelPickerTitle:(id)sender;
+
+-(void) desetupPickerView;
 
 @end
